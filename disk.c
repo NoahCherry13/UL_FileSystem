@@ -16,6 +16,27 @@ static int active = 0; /* is the virtual disk open (active) */
 static int handle; /* file handle to virtual disk       */
 /******************************************************************************/
 
+/* Datastructures for FS implementation
+ * Superblock
+ *   -Extent Implementation
+ * 
+ */
+
+struct super_block {
+  uint16_t used_block_bitmap_count;
+  uint16_t used_block_bitmap_offset;
+  uint16_t inode_metadata_blocks;
+  uint16_t inode_metadata_offset;
+};
+
+struct inode {
+  uint16_t magic_number;
+  uint16_t direct_offset;
+  //uint16_t single_indirect_offset
+  //uint16_t double_indirect_offset
+  uint16_t file_size
+}
+
 int make_disk(const char *name)
 {
 	int f, cnt;
