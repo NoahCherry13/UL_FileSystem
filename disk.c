@@ -8,8 +8,10 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
-
 #include "disk.h"
+
+#define MAX_BLOCKS 8192
+#define 
 
 /******************************************************************************/
 static int active = 0; /* is the virtual disk open (active) */
@@ -35,7 +37,19 @@ struct inode {
   //uint16_t single_indirect_offset
   //uint16_t double_indirect_offset
   uint16_t file_size
-}
+};
+
+struct directory{
+  char *obj_name;
+  uint16_t inode_num;
+};
+
+/* Globals
+ *
+ */
+char_size = sizeof(uint8_t);
+uint8_t free_bit_map[MAX_BLOCKS/char_size];
+
 
 int make_disk(const char *name)
 {
