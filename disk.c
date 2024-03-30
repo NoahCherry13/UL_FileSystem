@@ -65,6 +65,13 @@ void set_bit(int block_num)
   free_bit_map[map_index]|(1<<bit_to_set);
 }
 
+void reset_bit(int block_num)
+{
+  int bit_to_set = block_num % char_size;
+  int map_index = find_bit_index(block_num);
+  free_bit_map[map_index](~(1<<bit_to_set));
+}
+
 int make_disk(const char *name)
 {
 	int f, cnt;
@@ -89,7 +96,6 @@ int make_disk(const char *name)
 	}
 
 	close(f);
-
 	return 0;
 }
 
