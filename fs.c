@@ -14,6 +14,7 @@
  *                                                                                           
  */
 struct super_block {
+  struct 
   uint16_t used_block_bitmap_count;
   uint16_t used_block_bitmap_offset;
   uint16_t inode_metadata_blocks;
@@ -60,4 +61,25 @@ void reset_bit(int block_num)
   int bit_to_set = block_num % char_size;
   int map_index = find_bit_index(block_num);
   free_bit_map[map_index](~(1<<bit_to_set));
+}
+
+
+/* Management Routines
+ *
+ */
+
+int make_fs(const char *disk_name)
+{
+  
+  if (make_disk(disk_name)){
+    printf("Failed to Make Disk\n");
+    return -1;
+  }
+  
+  if (open_disk(disk_name)){
+    printf("Failed to Open Disk");
+    return -1;
+  }
+  
+  block_write(0, 
 }
