@@ -10,8 +10,7 @@
 #include <string.h>
 #include "disk.h"
 
-#define MAX_BLOCKS 8192
-#define 
+#define MAX_BLOCKS 8192 
 
 /******************************************************************************/
 static int active = 0; /* is the virtual disk open (active) */
@@ -50,6 +49,21 @@ struct directory{
 char_size = sizeof(uint8_t);
 uint8_t free_bit_map[MAX_BLOCKS/char_size];
 
+/* Helper Functions
+ *
+ */
+int find_bit_index(int block_num)
+{
+  int map_index = block_num/char_size;
+  return map_index;
+}
+
+void set_bit(int block_num)
+{
+  int bit_to_set = block_num % char_size;
+  int map_index = find_bit_index(block_num);
+  free_bit_map[map_index]|(1<<bit_to_set);
+}
 
 int make_disk(const char *name)
 {
