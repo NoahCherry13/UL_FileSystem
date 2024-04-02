@@ -36,6 +36,7 @@ struct directory{
   uint16_t *inode_nums;
 };
 
+struct 
 /* Globals                                                                                    
  *                                                                                            
  */
@@ -112,6 +113,14 @@ int make_fs(const char *disk_name)
 
 int mount_fs(const char *disk_name)
 {
+  /* This function mounts a file system that is stored on a virtual disk with name disk_name. 
+   * With the mount operation, a file system becomes "ready for use." You need to open the 
+   * disk and then load the meta-information that is necessary to handle the file system operations 
+   * that are discussed below. The function returns 0 on success, and -1 when the disk disk_name 
+   * could not be opened or when the disk does not contain a valid file system (that you previously 
+   * created with make_fs). 
+   */
+
   
   return 0;
 }
