@@ -8,6 +8,8 @@
 
 #define MAX_BLOCKS 8192
 #define MAX_FILES 64
+#define MAX_FILE_SIZE 1000000
+#define BLOCK_SIZE = 4000
 
 /* Datastructures for FS implementation                                   
  * Superblock                                                    
@@ -33,20 +35,23 @@ struct inode {
 
 struct directory{
   char obj_name[16];
+  uint32_t descriptor;
   uint16_t *inode_nums;
 };
 
-struct 
-/* Globals                                                                                    
- *                                                                                            
- */
+struct fd{
+  char is_used;
+  uint32_t descriptor;
+  uint32_t offset;
+};
+
+// Globals                                                                                  
 const int char_size = sizeof(uint8_t);
 uint8_t free_bit_map[MAX_BLOCKS/8];
+uint32_t open_fd_list[32];
 struct inode inode_list[64];
 
-/* Helper Functions                                                                           
- *                                                                                            
- */
+// Helper Functions                                                                                                                                                                       
 int find_bit_index(int block_num)
 {
   int map_index = block_num/char_size;
@@ -113,6 +118,7 @@ int make_fs(const char *disk_name)
 
 int mount_fs(const char *disk_name)
 {
+  struct super_block *sb = malloc(sizeof(super_block));
   /* This function mounts a file system that is stored on a virtual disk with name disk_name. 
    * With the mount operation, a file system becomes "ready for use." You need to open the 
    * disk and then load the meta-information that is necessary to handle the file system operations 
@@ -120,7 +126,19 @@ int mount_fs(const char *disk_name)
    * could not be opened or when the disk does not contain a valid file system (that you previously 
    * created with make_fs). 
    */
+  if (open_disk(disk_name)){
+    printf("failed to open disk partition\n");
+    return -1;
+  }
 
+  if (block_read(0, (void*)sb)){
+    printf("Failed to Read Block\n");
+    return -1;
+  }
+
+  
+
+  
   
   return 0;
 }
