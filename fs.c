@@ -92,7 +92,8 @@ int find_free_bit()
       break;
     }
   }
-  block_num = 
+  block_num = 8*index + bit_num;
+  return block_num;
 }
 //-------------------Management Routines-------------------------//
 
