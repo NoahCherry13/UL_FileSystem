@@ -76,7 +76,24 @@ void reset_bit(int block_num)
   free_bit_map[map_index] = free_bit_map[map_index]&(~(1<<bit_to_set));
 }
 
+int find_free_bit()
+{
+  int index = 0;
+  int bit_num = 0;
+  int block_num = -1;
+  for (index; index < MAX_BLOCKS/8; index++){
+    if (free_bit_map[index]&0xFF){
+      break;
+    }
+  }
 
+  for (bit_num = 0; bit_num < 8; bit_num++){
+    if ((free_bit_map[index]>>bit_num)&1){
+      break;
+    }
+  }
+  block_num = 
+}
 //-------------------Management Routines-------------------------//
 
 int make_fs(const char *disk_name)
