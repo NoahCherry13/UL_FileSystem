@@ -5,7 +5,7 @@ override CFLAGS := -Wall -Werror -std=gnu99 -O0 -g $(CFLAGS) -I.
 #override LDFLAGS := -fsanitize=undefined -fsanitize=leak $(LDLAGS)
 
 CC = gcc
-test_files = ./test_fs
+test_files = ./test_fs ./test_bit_ops
 
 # Build the threads.o file
 test_fs: test_fs.o fs.o disk.o
@@ -15,6 +15,10 @@ test_fs.o: test_fs.c
 fs.o: fs.c fs.h
 
 disk.o: disk.c disk.h
+
+test_find_bit: test_find_bit.o
+
+test_find_bit.o: test_find_bit.c
 
 .PHONY: clean
 
