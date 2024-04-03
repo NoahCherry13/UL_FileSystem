@@ -41,17 +41,21 @@ struct directory{
 
 struct fd{
   char is_used;
-  uint32_t descriptor;
+  uint32_t inode_num;
   uint32_t offset;
 };
 
-// Globals                                                                                  
+
+//-------------------------- Globals--------------------------------//                                                                                  
 const int char_size = sizeof(uint8_t);
 uint8_t free_bit_map[MAX_BLOCKS/8];
-uint32_t open_fd_list[32];
+uint32_t open_fd_list[32];              // list of open files
 struct inode inode_list[64];
+struct directory dir;
 
-// Helper Functions                                                                                                                                                                       
+
+
+//-------------------------Helper Functions------------------------//
 int find_bit_index(int block_num)
 {
   int map_index = block_num/char_size;
@@ -73,9 +77,7 @@ void reset_bit(int block_num)
 }
 
 
-/* Management Routines
- *
- */
+//-------------------Management Routines-------------------------//
 
 int make_fs(const char *disk_name)
 {
