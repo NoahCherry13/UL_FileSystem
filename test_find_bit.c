@@ -47,10 +47,10 @@ int main(){
   for (int i = 0; i < 9; i++){
     free_bit_map[i] = 255;
   }
-  free_bit_map[9] = 1;
-  int free_bit = find_free_bit();
-  printf("Free Block Available at {%d}\n", free_bit);
-  set_bit(free_bit);
+  free_bit_map[9] = 255;
+  
+  
+  reset_bit(1);
   
   return 0;
 }

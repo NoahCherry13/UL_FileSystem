@@ -19,10 +19,10 @@
 
 //void ptr [pointer to inode list][int][int][int]
 struct super_block {
-  uint16_t used_block_bitmap_count;  
-  uint16_t used_block_bitmap_offset;
-  uint16_t inode_metadata_blocks;
-  uint16_t inode_metadata_offset;
+  uint16_t dentries;  
+  uint16_t data_bitmap;
+  uint16_t inode_bitmap;
+  uint16_t inode_table;
 };
 
 struct inode {
@@ -53,10 +53,7 @@ uint32_t open_fd_list[32];              // list of open files
 struct inode inode_list[64];
 struct directory dir;
 
-
-
 //-------------------------Helper Functions------------------------//
-
 void set_bit(int block_num)
 {
   int bit_to_set = block_num % 8;
@@ -97,12 +94,17 @@ int make_fs(const char *disk_name)
   void empty_blk[BLOCK_SIZE];
   memset(empty_blk, 0, BLOCK_SIZE);
   struct super_block *sb = malloc(sizeof(struct super_block));
-  sb->used_block_bitmap_count = 0;
-  sb->used_block_bitmap_offset = 1;
-  sb->inode_metadata_blocks = 64;
-  sb->inode_metadata_offset = 3;
+  sb->dentries = 1;
+  sb->inode_bitmap = 3;
+  sb->data_bitmap = 2;
+  sb->inode_table = 4;
 
-  for(int i = 0; i < 
+  for(int i = 0; i < 4; i++){
+    set_bit(i);
+  }
+  for(int i = 4; i < MAX_FILES; i++){
+    reset_bit(i);
+  }
   if (make_disk(disk_name)){
     printf("Failed to Make Disk\n");
     return -1;
