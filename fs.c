@@ -56,23 +56,18 @@ struct directory dir;
 
 
 //-------------------------Helper Functions------------------------//
-int find_bit_index(int block_num)
-{
-  int map_index = block_num/char_size;
-  return map_index;
-}
 
 void set_bit(int block_num)
 {
-  int bit_to_set = block_num % char_size;
-  int map_index = find_bit_index(block_num);
+  int bit_to_set = block_num % 8;
+  int map_index = block_num / 8;
   free_bit_map[map_index] = free_bit_map[map_index]|(1<<bit_to_set);
 }
 
 void reset_bit(int block_num)
 {
-  int bit_to_set = block_num % char_size;
-  int map_index = find_bit_index(block_num);
+  int bit_to_set = block_num % 8;
+  int map_index = block_num / 8;
   free_bit_map[map_index] = free_bit_map[map_index]&(~(1<<bit_to_set));
 }
 
@@ -82,13 +77,13 @@ int find_free_bit()
   int bit_num = 0;
   int block_num = -1;
   for (index; index < MAX_BLOCKS/8; index++){
-    if (free_bit_map[index]&0xFF){
+    if (free_bit_map[index]^0xFF){
       break;
     }
   }
 
   for (bit_num = 0; bit_num < 8; bit_num++){
-    if ((free_bit_map[index]>>bit_num)&1){
+    if ((free_bit_map[index]>>bit_num)^1){
       break;
     }
   }
@@ -99,14 +94,15 @@ int find_free_bit()
 
 int make_fs(const char *disk_name)
 {
+  void empty_blk[BLOCK_SIZE];
+  memset(empty_blk, 0, BLOCK_SIZE);
   struct super_block *sb = malloc(sizeof(struct super_block));
   sb->used_block_bitmap_count = 0;
   sb->used_block_bitmap_offset = 1;
   sb->inode_metadata_blocks = 64;
   sb->inode_metadata_offset = 3;
 
-  //void *write_buf = malloc;
-  //memcpy(write_buf, sb, sizeof(struct super_block));
+  for(int i = 0; i < 
   if (make_disk(disk_name)){
     printf("Failed to Make Disk\n");
     return -1;
@@ -118,18 +114,24 @@ int make_fs(const char *disk_name)
   }
 
   //Write superblock
+  memcpy(empty_blk, sb, sizeof(struct super_block));
   if (block_write(0, (void *)sb)){
     printf("Block Write Failed\n");
     return -1;
   }
 
-  //write inode_bitmap
-  if (block_write(0, (void *)inode_list)){
+  //write inode list
+  memset(empty_blk, 0, BLOCK_SIZE);
+  memcpy(empty_blk, inode_list, MAX_FILES * sizeof(struct inode));
+  if (block_write(3, empty_blk)){
     printf("Block Write Failed\n");
     return -1;
   }
   //write data bitmap
-  if (block_write(0, (void *)free_bit_map)){
+  
+  memset(empty_blk, 0, BLOCK_SIZE);
+  memcpy(empty_blk, free_bit_map, MAX_BLOCKS / 8);
+  if (block_write(1, empty_blk){
     printf("Block Write Failed\n");
     return -1;
   }
