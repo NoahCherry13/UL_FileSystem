@@ -9,7 +9,7 @@
 #define MAX_BLOCKS 8192
 #define MAX_FILES 64
 #define MAX_FILE_SIZE 1000000
-#define BLOCK_SIZE = 4000
+
 
 /* Datastructures for FS implementation                                   
  * Superblock                                                    
@@ -35,8 +35,8 @@ struct inode {
 
 struct directory{
   char obj_name[16];
-  uint32_t descriptor;
-  uint16_t *inode_nums;
+  char used;
+  uint16_t inode;
 };
 
 struct fd{
@@ -51,7 +51,7 @@ const int char_size = sizeof(uint8_t);
 uint8_t free_bit_map[MAX_BLOCKS/8];
 uint32_t open_fd_list[32];              // list of open files
 struct inode inode_list[64];
-struct directory dir;
+struct directory *dir;
 
 //-------------------------Helper Functions------------------------//
 void set_bit(int block_num)
@@ -73,14 +73,16 @@ int find_free_bit()
   int index = 0;
   int bit_num = 0;
   int block_num = -1;
-  for (index; index < MAX_BLOCKS/8; index++){
-    if (free_bit_map[index]^0xFF){
+  for (int i; i < MAX_BLOCKS/8; i++){
+    if (free_bit_map[i]^0xFF){
+      index = i;
       break;
     }
   }
 
-  for (bit_num = 0; bit_num < 8; bit_num++){
+  for (int i = 0; i < 8; i++){
     if ((free_bit_map[index]>>bit_num)^1){
+      bit_num = i;
       break;
     }
   }
@@ -91,7 +93,7 @@ int find_free_bit()
 
 int make_fs(const char *disk_name)
 {
-  void empty_blk[BLOCK_SIZE];
+  char empty_blk[BLOCK_SIZE];
   memset(empty_blk, 0, BLOCK_SIZE);
   struct super_block *sb = malloc(sizeof(struct super_block));
   sb->dentries = 1;
@@ -124,25 +126,37 @@ int make_fs(const char *disk_name)
 
   //write inode list
   memset(empty_blk, 0, BLOCK_SIZE);
-  memcpy(empty_blk, inode_list, MAX_FILES * sizeof(struct inode));
+  memcpy(empty_blk, inode_list, MAX_BLOCKS * sizeof(struct inode));
   if (block_write(3, empty_blk)){
     printf("Block Write Failed\n");
     return -1;
   }
-  //write data bitmap
   
+  //write data bitmap
   memset(empty_blk, 0, BLOCK_SIZE);
   memcpy(empty_blk, free_bit_map, MAX_BLOCKS / 8);
-  if (block_write(1, empty_blk){
+  if (block_write(1, empty_blk)){
     printf("Block Write Failed\n");
     return -1;
   }
+  
+  // write dir entries
+  dir = (struct directory *) malloc(MAX_FILES *sizeof(struct directory));
+  for (int i = 0; i < MAX_FILES; i++){
+    dir[i].used = 0;
+    dir[i].inode = -1;
+    strcpy(dir[i].obj_name, "");
+  }
+  if (block_write(1, empty_blk)){
+    printf("Block Write Failed\n");
+    return -1;
+  }  
   return 0;
 }
 
 int mount_fs(const char *disk_name)
 {
-  struct super_block *sb = malloc(sizeof(super_block));
+  struct super_block *sb = malloc(sizeof(struct super_block));
   /* This function mounts a file system that is stored on a virtual disk with name disk_name. 
    * With the mount operation, a file system becomes "ready for use." You need to open the 
    * disk and then load the meta-information that is necessary to handle the file system operations 
