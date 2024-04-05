@@ -181,7 +181,6 @@ int make_fs(const char *disk_name)
 
 int mount_fs(const char *disk_name)
 {
-  struct super_block *sb = malloc(sizeof(struct super_block));
   /* This function mounts a file system that is stored on a virtual disk with name disk_name. 
    * With the mount operation, a file system becomes "ready for use." You need to open the 
    * disk and then load the meta-information that is necessary to handle the file system operations 
@@ -189,11 +188,14 @@ int mount_fs(const char *disk_name)
    * could not be opened or when the disk does not contain a valid file system (that you previously 
    * created with make_fs). 
    */
+  //possibly not needed
   if (open_disk(disk_name)){
     printf("failed to open disk partition\n");
     return -1;
   }
 
+  char read_buffer[BLOCK_SIZE];  //block size buffer to read from disk
+  
   if (block_read(0, (void*)sb)){
     printf("Failed to Read Block\n");
     return -1;
