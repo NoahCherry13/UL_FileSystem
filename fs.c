@@ -49,6 +49,7 @@ struct fd{
 //-------------------------- Globals--------------------------------//                                                                                  
 const int char_size = sizeof(uint8_t);
 uint8_t free_bit_map[MAX_BLOCKS/8];
+uint8_t inode_bit_map[64];
 uint32_t open_fd_list[32];              // list of open files
 struct inode inode_list[64];
 struct directory *dir;
