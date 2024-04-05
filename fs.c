@@ -48,41 +48,50 @@ struct fd{
 
 //-------------------------- Globals--------------------------------//                                                                                  
 const int char_size = sizeof(uint8_t);
-uint8_t free_bit_map[MAX_BLOCKS/8];
-uint8_t inode_bit_map[64];
+uint8_t data_bitmap[MAX_BLOCKS/8];
+uint8_t inode_bitmap[64];
 uint32_t open_fd_list[32];              // list of open files
 struct inode inode_list[64];
 struct directory *dir;
 
 //-------------------------Helper Functions------------------------//
-void set_bit(int block_num)
+void set_bit(int block_num, uint8_t *bitmap)
 {
   int bit_to_set = block_num % 8;
   int map_index = block_num / 8;
-  free_bit_map[map_index] = free_bit_map[map_index]|(1<<bit_to_set);
+  bitmap[map_index] = bitmap[map_index]|(1<<bit_to_set);
 }
 
-void reset_bit(int block_num)
+void reset_bit(int block_num, uint8_t *bitmap)
 {
   int bit_to_set = block_num % 8;
   int map_index = block_num / 8;
-  free_bit_map[map_index] = free_bit_map[map_index]&(~(1<<bit_to_set));
+  bitmap[map_index] = bitmap[map_index]&(~(1<<bit_to_set));
 }
 
-int find_free_bit()
+int find_free_bit(uint8_t *bitmap)
 {
   int index = 0;
   int bit_num = 0;
   int block_num = -1;
+  
+  //initialize bitmaps
   for (int i; i < MAX_BLOCKS/8; i++){
-    if (free_bit_map[i]^0xFF){
+    if (bitmap[i]^0xFF){
       index = i;
       break;
     }
   }
 
+  for (int i; i < MAX_FILES/8; i++){
+    if (bitmap[i]^0xFF){
+      index = i;
+      break;
+    }
+  }
+  
   for (int i = 0; i < 8; i++){
-    if ((free_bit_map[index]>>bit_num)^1){
+    if ((bitmap[index]>>bit_num)^1){
       bit_num = i;
       break;
     }
@@ -103,11 +112,17 @@ int make_fs(const char *disk_name)
   sb->inode_table = 4;
 
   for(int i = 0; i < 4; i++){
-    set_bit(i);
+    set_bit(i, data_bitmap);
   }
+
+  for(int i = 0; i < MAX_FILES; i++){
+    reset_bit(i, inode_bitmap);
+  }
+
   for(int i = 4; i < MAX_FILES; i++){
-    reset_bit(i);
+    reset_bit(i, data_bitmap);
   }
+
   if (make_disk(disk_name)){
     printf("Failed to Make Disk\n");
     return -1;
@@ -127,7 +142,7 @@ int make_fs(const char *disk_name)
 
   //write inode list
   memset(empty_blk, 0, BLOCK_SIZE);
-  memcpy(empty_blk, inode_list, MAX_BLOCKS * sizeof(struct inode));
+  memcpy(empty_blk, inode_list, MAX_FILES * sizeof(struct inode));
   if (block_write(3, empty_blk)){
     printf("Block Write Failed\n");
     return -1;
@@ -135,11 +150,20 @@ int make_fs(const char *disk_name)
   
   //write data bitmap
   memset(empty_blk, 0, BLOCK_SIZE);
-  memcpy(empty_blk, free_bit_map, MAX_BLOCKS / 8);
+  memcpy(empty_blk, data_bitmap, MAX_BLOCKS / 8);
   if (block_write(1, empty_blk)){
     printf("Block Write Failed\n");
     return -1;
   }
+
+  //write inode bitmap
+  memset(empty_blk, 0, BLOCK_SIZE);
+  memcpy(empty_blk, inode_bitmap, MAX_BLOCKS / 8);
+  if (block_write(1, empty_blk)){
+    printf("Block Write Failed\n");
+    return -1;
+  }
+  
   
   // write dir entries
   dir = (struct directory *) malloc(MAX_FILES *sizeof(struct directory));
