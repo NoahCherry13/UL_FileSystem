@@ -99,6 +99,11 @@ int find_free_bit(uint8_t *bitmap)
   block_num = 8*index + bit_num;
   return block_num;
 }
+
+int find_inode(){
+
+}
+
 //-------------------Management Routines-------------------------//
 
 int make_fs(const char *disk_name)
@@ -285,4 +290,8 @@ int umount_fs()
   }
   
   return 0;
+}
+
+int fs_open(const char *name){
+  
 }
