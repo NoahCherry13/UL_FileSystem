@@ -100,8 +100,22 @@ int find_free_bit(uint8_t *bitmap)
   return block_num;
 }
 
-int find_inode(){
+int find_inode(const char *name){
+  for (int i = 0; i < MAX_FILES; i++){
+    if(!strcmp(dirs[i].obj_name, name) && dirs[i].used){
+      return dirs[i].inode;
+    }
+  }
+  return -1;
+}
 
+int find_open_fd(){
+  for(int i = 0; i < 32; i++){
+    if(!open_fd_list->is_used){
+      return i;
+    }
+  }
+  return -1;
 }
 
 //-------------------Management Routines-------------------------//
@@ -293,5 +307,37 @@ int umount_fs()
 }
 
 int fs_open(const char *name){
+
+  int inode_num = find_inode(name);
+  if(!(inode_num+1)){
+    printf("Inode Entry Not Found\n");
+    return -1;
+  }
+
+  int fd_index = find_open_fd();
+  if(fd_index < 0){
+    printf("No Empty File Descriptors\n");
+  }
+
+  open_fd_list[fd_index].offset = 0;
+  open_fd_list[fd_index].is_used = 1;
+  open_fd_list[fd_index].inode_num = inode_num;
   
+  return fd_index;
+}
+
+int fs_close(int fd){
+
+  if(fd > 32 || fd < 0){
+    printf("Invalid fd\n");
+    return -1;
+  }
+  if(!open_fd_list[fd].is_used){
+    printf("No Open File at {%d}\n", fd);
+    return -1;
+  }
+  open_fd_list[fd].offset = 0;
+  open_fd_list[fd].is_used = 0;
+  open_fd_list[fd].inode_num = 0;
+  return 0;
 }
