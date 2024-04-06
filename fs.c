@@ -118,6 +118,14 @@ int find_open_fd(){
   return -1;
 }
 
+int find_open_dir()
+{
+  for(int i = 0; i < MAX_FILES; i++){
+    if(!dirs[i].used) return i;
+  }
+  return -1;
+}
+
 //-------------------Management Routines-------------------------//
 
 int make_fs(const char *disk_name)
@@ -346,7 +354,11 @@ int fs_create(const char *name)
 {
   for(int i = 0; i < MAX_FILES; i++){
     if(!strcmp(dirs[i].obj_name, name)){
-      
+      printf("File Exists\n");
+      return -1
     }
   }
+
+  
+  
 }
