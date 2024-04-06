@@ -341,3 +341,12 @@ int fs_close(int fd){
   open_fd_list[fd].inode_num = 0;
   return 0;
 }
+
+int fs_create(const char *name)
+{
+  for(int i = 0; i < MAX_FILES; i++){
+    if(!strcmp(dirs[i].obj_name, name)){
+      
+    }
+  }
+}
