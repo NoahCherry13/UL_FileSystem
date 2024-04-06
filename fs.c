@@ -50,10 +50,10 @@ struct fd{
 const int char_size = sizeof(uint8_t);
 uint8_t data_bitmap[MAX_BLOCKS/8];
 uint8_t inode_bitmap[64];
-uint32_t open_fd_list[32];              // list of open files
+struct fd open_fd_list[32];              // list of open files
 struct inode inode_list[64];
-struct directory *dir;
-
+struct directory dirs[64];
+struct super_block *sb;
 //-------------------------Helper Functions------------------------//
 void set_bit(int block_num, uint8_t *bitmap)
 {
@@ -105,7 +105,7 @@ int make_fs(const char *disk_name)
 {
   char empty_blk[BLOCK_SIZE];
   memset(empty_blk, 0, BLOCK_SIZE);
-  struct super_block *sb = malloc(sizeof(struct super_block));
+  sb = malloc(sizeof(struct super_block));
   sb->dentries = 1;
   sb->inode_bitmap = 3;
   sb->data_bitmap = 2;
@@ -166,11 +166,11 @@ int make_fs(const char *disk_name)
   
   
   // write dir entries
-  dir = (struct directory *) malloc(MAX_FILES *sizeof(struct directory));
+  //dirs = (struct directory *) malloc(MAX_FILES *sizeof(struct directory));
   for (int i = 0; i < MAX_FILES; i++){
-    dir[i].used = 0;
-    dir[i].inode = -1;
-    strcpy(dir[i].obj_name, "");
+    dirs[i].used = 0;
+    dirs[i].inode = -1;
+    strcpy(dirs[i].obj_name, "");
   }
   if (block_write(1, empty_blk)){
     printf("Block Write Failed\n");
@@ -195,15 +195,94 @@ int mount_fs(const char *disk_name)
   }
 
   char read_buffer[BLOCK_SIZE];  //block size buffer to read from disk
+  sb = malloc(sizeof(struct super_block));
   
-  if (block_read(0, (void*)sb)){
+  if (block_read(0, read_buffer)){
     printf("Failed to Read Block\n");
     return -1;
   }
 
-  
+  memcpy(sb, read_buffer, sizeof(struct super_block));
 
+  uint16_t data_map_offset = sb->data_bitmap;
+  uint16_t inode_map_offset = sb->inode_bitmap;
+  uint16_t inode_list_offset = sb->inode_table;
+  uint16_t dentry_offset = sb->dentries;
+
+  //read in bitmaps
+  if (block_read(data_map_offset, read_buffer)){
+    printf("Failed to Read Block\n");
+    return -1;
+  }
+  memcpy(data_bitmap, read_buffer, sizeof(data_bitmap));
+
+  if (block_read(inode_map_offset, read_buffer)){
+    printf("Failed to Read Block\n");
+    return -1;
+  }
+  memcpy(inode_bitmap, read_buffer, sizeof(inode_bitmap));
   
+  if (block_read(inode_list_offset, read_buffer)){
+    printf("Failed to Read Block\n");
+    return -1;
+  }
+  memcpy(inode_list, read_buffer, sizeof(inode_list));
+
+  if (block_read(dentry_offset, read_buffer)){
+    printf("Failed to Read Block\n");
+    return -1;
+  }
+  memcpy(dirs, read_buffer, sizeof(dirs));
+
+  for (int i = 0; i < 32; i++){
+    open_fd_list[i].is_used = 0;
+    open_fd_list[i].offset = 0;
+  }
+  
+  return 0;
+}
+
+int umount_fs()
+{
+  char write_buffer[BLOCK_SIZE];
+  memset(write_buffer, 0, BLOCK_SIZE);
+  memcpy(write_buffer, dirs, MAX_FILES*sizeof(struct directory));
+
+  if (block_write(sb->dentries, write_buffer)){
+    printf("Error Writing Block\n");
+    return -1;
+  }
+
+  memset(write_buffer, 0, BLOCK_SIZE);
+  memcpy(write_buffer, data_bitmap, sizeof(data_bitmap));
+  if (block_write(sb->data_bitmap, write_buffer)){
+    printf("Error Writing Block\n");
+    return -1;
+  }  
+
+  memset(write_buffer, 0, BLOCK_SIZE);
+  memcpy(write_buffer, inode_bitmap, sizeof(inode_bitmap));
+  if (block_write(sb->inode_bitmap, write_buffer)){
+    printf("Error Writing Block\n");
+    return -1;
+  }
+
+  memset(write_buffer, 0, BLOCK_SIZE);
+  memcpy(write_buffer, inode_list, sizeof(inode_list));
+  if (block_write(sb->inode_table, write_buffer)){
+    printf("Error Writing Block\n");
+    return -1;
+  }
+
+  for(int i = 0; i < MAX_FILES; i++){
+    open_fd_list[i].is_used = 0;
+    open_fd_list[i].offset = 0;
+  }
+
+  if (close_disk()){
+    printf("Failed to close disk\n");
+    return -1;
+  }
   
   return 0;
 }
