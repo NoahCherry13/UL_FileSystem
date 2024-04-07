@@ -534,6 +534,20 @@ int fs_lseek(int fd, off_t offset){
     printf("Illegal FD\n");
     return -1;
   }
+
+  if (!open_fd_list[fd].is_used){
+    printf("FD Not Open\n");
+    return -1;
+  }
+
+  if (offset < 0 || offset > inode_list[open_fd_list[fd].inode_num].file_size){
+    printf("Invalid Offset\n");
+    return -1;
+  }
+
+  open_fd_list[fd].offset = offset;
+
+  return 0;
 }
 
 int fs_truncate(int fd, off_t length){
