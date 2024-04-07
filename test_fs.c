@@ -25,6 +25,11 @@ int main(){
     printf("file open failed\n");
   }
 
+  char buf[1];
+  if (fs_read(fd, buf, 10)){
+    printf("Failed Read\n");
+  }
+
   if(fs_close(fd)){
     printf("file open failed\n");
   }
