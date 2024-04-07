@@ -15,5 +15,6 @@ int main(){
   umount_fs("test_disk");
   mount_fs("test_disk");
   fs_create("Hello_World");
+  // fs_delete("Hello_World");
   return 0;
 }

@@ -27,7 +27,7 @@ struct super_block {
 
 struct inode {
   uint16_t magic_number;
-  uint16_t direct_offset;
+  uint16_t direct_offset[64];
   //uint16_t single_indirect_offset
   //uint16_t double_indirect_offset
   uint16_t file_size;
@@ -404,10 +404,13 @@ int fs_delete(const char *name)
 
   dirs[dir_ind].used = 0;
   reset_bit(inode_num, inode_bitmap);
-
+  used_blocks = inode_list[inode_num].file_size/BLOCK_SIZE;
   for (int i = 0; i < used_blocks; i++){
-    reset_bit(inode_list[indode_num].direct_offset+i, data_bitmap);
+    reset_bit(inode_list[inode_num].direct_offset[i], data_bitmap);
+    inode_list[inode_num].direct_offset[i] = -1;
   }
+
+  inode_list[inode_num].file_size = 0;
   return 0;
 }
 
