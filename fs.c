@@ -516,11 +516,24 @@ int fs_get_filesize(int fd){
 }
   
 int fs_listfiles(char ***files){
-  return -1;
+  int name_ind = 0;
+  char **file_names = (char**) malloc(15*MAX_FILES);
+  for(int i = 0; i < MAX_FILES; i++){
+    if(dirs[i].used){
+      strncpy(file_names[name_ind], dirs[i].obj_name, 15);
+      name_ind++;
+    }
+  }
+  file_names[name_ind] = NULL;
+  *files = file_names;
+  return 0;
 }
 
 int fs_lseek(int fd, off_t offset){
-  return -1;
+  if(fd < 0 || fd >= 32){
+    printf("Illegal FD\n");
+    return -1;
+  }
 }
 
 int fs_truncate(int fd, off_t length){
