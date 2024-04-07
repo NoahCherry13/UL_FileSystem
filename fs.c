@@ -465,6 +465,22 @@ int fs_read(int fd, void *buf, size_t nbyte)
 
 int fs_write(int fd, const void *buf, size_t nbyte)
 {
+
+  if(fd < 0 || fd >= 32){
+    printf("Illegal FD\n");
+    return -1;
+  }
+
+  if (!open_fd_list[fd].is_used){
+    printf("FD Not Open\n");
+    return -1;
+  }
+
+  if (offset < 0 || offset > inode_list[open_fd_list[fd].inode_num].file_size){
+    printf("Invalid Offset\n");
+    return -1;
+  }
+  
   char *write_buffer[BLOCK_SIZE];
   int bytes_to_write = 0;
   int bytes_left = nbyte;
@@ -473,6 +489,7 @@ int fs_write(int fd, const void *buf, size_t nbyte)
   int block_offset = nbyte / BLOCK_SIZE;
   struct fd write_fd = open_fd_list[fd];
   struct inode write_node = inode_list[write_fd.inode_num];
+
 
   for (int i = 0; i < bytes_to_write/BLOCK_SIZE; i++){
 
@@ -551,5 +568,22 @@ int fs_lseek(int fd, off_t offset){
 }
 
 int fs_truncate(int fd, off_t length){
-  return -1;
+
+  if(fd < 0 || fd >= 32){
+    printf("Illegal FD\n");
+    return -1;
+  }
+
+  if (!open_fd_list[fd].is_used){
+    printf("FD Not Open\n");
+    return -1;
+  }
+
+  if (offset < 0 || offset > inode_list[open_fd_list[fd].inode_num].file_size){
+    printf("Invalid Offset\n");
+    return -1;
+  }
+
+  
+  return 0;
 }
