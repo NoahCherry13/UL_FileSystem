@@ -27,7 +27,7 @@ struct super_block {
 
 struct inode {
   uint16_t magic_number;
-  uint16_t direct_offset[64];
+  uint16_t direct_offset[10];
   //uint16_t single_indirect_offset
   //uint16_t double_indirect_offset
   uint16_t file_size;
@@ -144,6 +144,8 @@ int make_fs(const char *disk_name)
   sb->data_bitmap = 2;
   sb->inode_table = 4;
 
+
+  
   for(int i = 0; i < 4; i++){
     set_bit(i, data_bitmap);
   }
@@ -172,7 +174,7 @@ int make_fs(const char *disk_name)
     printf("Block Write Failed\n");
     return -1;
   }
-  
+ 
   //write inode list
   memset(empty_blk, 0, BLOCK_SIZE);
   memcpy(empty_blk, inode_list, MAX_FILES * sizeof(struct inode));
@@ -183,20 +185,19 @@ int make_fs(const char *disk_name)
   
   //write data bitmap
   memset(empty_blk, 0, BLOCK_SIZE);
-  memcpy(empty_blk, data_bitmap, MAX_BLOCKS);
+  memcpy(empty_blk, data_bitmap, sizeof(data_bitmap));
   if (block_write(1, empty_blk)){
     printf("Block Write Failed\n");
     return -1;
   }
-
+    
   //write inode bitmap
   memset(empty_blk, 0, BLOCK_SIZE);
-  memcpy(empty_blk, inode_bitmap, MAX_BLOCKS);
+  memcpy(empty_blk, inode_bitmap, sizeof(inode_bitmap));
   if (block_write(1, empty_blk)){
     printf("Block Write Failed\n");
     return -1;
   }
-  
   
   // write dir entries
   //dirs = (struct directory *) malloc(MAX_FILES *sizeof(struct directory));
@@ -205,10 +206,12 @@ int make_fs(const char *disk_name)
     dirs[i].inode = -1;
     strcpy(dirs[i].obj_name, "");
   }
+  
   if (block_write(1, empty_blk)){
     printf("Block Write Failed\n");
     return -1;
-  }  
+  }
+    
   return 0;
 }
   
@@ -236,12 +239,12 @@ int mount_fs(const char *disk_name)
   }
 
   memcpy(sb, read_buffer, sizeof(struct super_block));
-
+  
   uint16_t data_map_offset = sb->data_bitmap;
   uint16_t inode_map_offset = sb->inode_bitmap;
   uint16_t inode_list_offset = sb->inode_table;
   uint16_t dentry_offset = sb->dentries;
-
+  
   //read in bitmaps
   if (block_read(data_map_offset, read_buffer)){
     printf("Failed to Read Block\n");
@@ -380,7 +383,6 @@ int fs_create(const char *name)
 
   inode_list[inode].magic_number = 1;
   inode_list[inode].file_size = 0;
-  printf("created file\n");
   return 0;
 }
 
@@ -419,4 +421,5 @@ int fs_delete(const char *name)
   inode_list[inode_num].file_size = 0;
   return 0;
 }
+
 
