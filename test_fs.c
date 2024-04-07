@@ -12,9 +12,24 @@ int main(){
   if(make_fs(disk_name)){
     printf("unplanned testing opportunity\n");
   }
-  umount_fs("test_disk");
-  mount_fs("test_disk");
+  //if(umount_fs("test_disk")){
+  //  printf("shit\n");
+  //}
+  if(mount_fs("test_disk")){
+    printf("fuck\n");
+  }
   fs_create("Hello_World");
+
+  int fd = fs_open("Hello_World");
+  if(fd == -1){
+    printf("file open failed\n");
+  }
+
+  if(fs_close(fd)){
+    printf("file open failed\n");
+  }
+  
+  
   if(fs_delete("Hello_World")){
     printf("Failed to delete file\n");
   }

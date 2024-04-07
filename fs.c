@@ -211,7 +211,11 @@ int make_fs(const char *disk_name)
     printf("Block Write Failed\n");
     return -1;
   }
-    
+
+  if (close_disk()){
+    printf("Failed to Close Disk\n");
+    return -1;
+  }
   return 0;
 }
   
@@ -424,6 +428,7 @@ int fs_delete(const char *name)
 
 int fs_read(int fd, void *buf, size_t nbyte)
 {
+  
   return -1;
 }
 
