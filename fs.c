@@ -49,7 +49,7 @@ struct fd{
 //-------------------------- Globals--------------------------------//                                                                                  
 const int char_size = sizeof(uint8_t);
 uint8_t data_bitmap[MAX_BLOCKS/8];
-uint8_t inode_bitmap[64];
+uint8_t inode_bitmap[8];
 struct fd open_fd_list[32];              // list of open files
 struct inode inode_list[64];
 struct directory dirs[64];
@@ -111,7 +111,7 @@ int find_inode(const char *name){
 
 int find_open_fd(){
   for(int i = 0; i < 32; i++){
-    if(!open_fd_list->is_used){
+    if(!open_fd_list[i].is_used){
       return i;
     }
   }
@@ -355,10 +355,59 @@ int fs_create(const char *name)
   for(int i = 0; i < MAX_FILES; i++){
     if(!strcmp(dirs[i].obj_name, name)){
       printf("File Exists\n");
-      return -1
+      return -1;
     }
   }
 
+  int dir_ind = find_open_dir();
+  int inode = find_free_bit(inode_bitmap);
+
+  if(inode == -1 || dir_ind == -1){
+    printf("Unable to find Dir/Inode Entries\n");
+    return -1;
+  }
   
-  
+  strcpy(dirs[dir_ind].obj_name, name);
+  dirs[dir_ind].inode = inode;
+  dirs[dir_ind].used = 1;
+  set_bit(inode, inode_bitmap);
+
+  inode_list[inode].magic_number = 1;
+  inode_list[inode].file_size = 0;
+  printf("created file\n");
+  return 0;
 }
+
+int fs_delete(const char *name)
+{
+  int inode_num = find_inode(name);
+  int dir_ind = -1;
+  int used_blocks = 0;
+  if(!(inode_num+1)){
+    printf("Inode Entry Not Found\n");
+    return -1;
+  }
+
+  for (int i = 0; i < 32; i++){
+    if (open_fd_list[i].inode_num == inode_num && open_fd_list[i].is_used){
+      printf("File is Open! Cannot Delete\n");
+      return -1;
+    }
+  }
+
+  for (int i = 0; i < MAX_FILES; i++){
+    if (dirs[i].inode == inode_num){
+      dir_ind = i;
+      break;
+    }
+  }
+
+  dirs[dir_ind].used = 0;
+  reset_bit(inode_num, inode_bitmap);
+
+  for (int i = 0; i < used_blocks; i++){
+    reset_bit(inode_list[indode_num].direct_offset+i, data_bitmap);
+  }
+  return 0;
+}
+

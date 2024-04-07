@@ -12,10 +12,8 @@ int main(){
   if(make_fs(disk_name)){
     printf("unplanned testing opportunity\n");
   }
-
-  for(int i = 0; i < 33; i++){
-    open_fd_list[i].is_used = 1;
-    fs_open("testName");
-  }
+  umount_fs("test_disk");
+  mount_fs("test_disk");
+  fs_create("Hello_World");
   return 0;
 }
