@@ -143,8 +143,6 @@ int make_fs(const char *disk_name)
   sb->inode_bitmap = 3;
   sb->data_bitmap = 2;
   sb->inode_table = 4;
-
-
   
   for(int i = 0; i < 4; i++){
     set_bit(i, data_bitmap);
@@ -476,10 +474,6 @@ int fs_write(int fd, const void *buf, size_t nbyte)
     return -1;
   }
 
-  if (offset < 0 || offset > inode_list[open_fd_list[fd].inode_num].file_size){
-    printf("Invalid Offset\n");
-    return -1;
-  }
   
   char *write_buffer[BLOCK_SIZE];
   int bytes_to_write = 0;
@@ -489,16 +483,22 @@ int fs_write(int fd, const void *buf, size_t nbyte)
   int block_offset = nbyte / BLOCK_SIZE;
   struct fd write_fd = open_fd_list[fd];
   struct inode write_node = inode_list[write_fd.inode_num];
+  int need_new = 0;
+  int block_to_write = (nbyte + byte_offset)/BLOCK_SIZE;
+  int bytes_written = 0;
 
+  
+  if ((nbyte + byte_offset) % BLOCK_SIZE) block_to_write++;
+  
+  for (int i = 0; i < block_to_write; i++){
 
-  for (int i = 0; i < bytes_to_write/BLOCK_SIZE; i++){
-
-    if (block_offset * BLOCK_SIZE > write_node.file_size){
+    if (block_offset * BLOCK_SIZE > write_node.file_size || write_node.file_size == 0){
+      need_new = 1;
       int free_block = find_free_bit(data_bitmap);
       write_node.direct_offset[block_offset] = free_block;
       set_bit(free_block, data_bitmap);
     }
-
+    
     if (byte_offset + bytes_to_write > BLOCK_SIZE){
       current_write = BLOCK_SIZE - byte_offset;
     }else{
@@ -506,26 +506,29 @@ int fs_write(int fd, const void *buf, size_t nbyte)
     }
     
     //preserve data in current block if offset
-    memset(write_buffer, 0, sizeof(write_buffer));
-    //check this if error
-    if(block_read(block_offset, write_buffer))
-      {
+    if(need_new){
+      memset(write_buffer, 0, sizeof(write_buffer));
+    }else{ 
+      if(block_read(block_offset, write_buffer)){
 	printf("Couldn't read current block\n");
 	return -1;
       }
+    }
+    
     memcpy(write_buffer + byte_offset, buf + bytes_to_write-bytes_left, current_write);
-
     if (block_write(block_offset, write_buffer)){
       printf("Failed to Write to Block\n");
       return -1;
     }
-
+    bytes_written += current_write;
     bytes_left -= current_write;
     byte_offset = 0;
     block_offset++;
-    write_fd.offset += bytes_to_write;
+    write_fd.offset += current_write;
+    write_node.file_size += current_write;
   }
-  return bytes_to_write;
+  
+  return bytes_written;
 }
 
 int fs_get_filesize(int fd){
@@ -576,11 +579,6 @@ int fs_truncate(int fd, off_t length){
 
   if (!open_fd_list[fd].is_used){
     printf("FD Not Open\n");
-    return -1;
-  }
-
-  if (offset < 0 || offset > inode_list[open_fd_list[fd].inode_num].file_size){
-    printf("Invalid Offset\n");
     return -1;
   }
 
