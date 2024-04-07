@@ -431,14 +431,36 @@ int fs_read(int fd, void *buf, size_t nbyte)
   char *read_buffer[BLOCK_SIZE];
   int bytes_to_read = 0;
   int bytes_left = nbyte;
-  int byte_offset;
-  int block_offset;
+  int current_read;
+  int byte_offset = nbyte % BLOCK_SIZE;
+  int block_offset = nbyte / BLOCK_SIZE;
   struct fd read_fd = open_fd_list[fd];
   struct inode read_node = inode_list[read_fd.inode_num];
   
-  if (nbyte + read_fd.offset > read_node->
+  if (nbyte + read_fd.offset > read_node.file_size){
+    bytes_to_read = read_node.file_size - read_fd.offset;
+  }
+
+  while (bytes_left){
+    if(block_read(read_node.direct_offset[block_offset], read_buffer)){
+      printf("Failed to Read Block\n");
+      return -1;
+    }
+
+    if (byte_offset + bytes_to_read > BLOCK_SIZE){
+      current_read = BLOCK_SIZE - byte_offset;
+    }else{
+      current_read = bytes_left;
+    }
+
+    bytes_left -= current_read;
+    byte_offset = 0;
+    block_offset++;
+  }
+
+  read_fd.offset += bytes_to_read;
   
-  return -1;
+  return bytes_to_read;
 }
 
 int fs_write(int fd, const void *buf, size_t nbyte)
