@@ -472,33 +472,49 @@ int fs_write(int fd, const void *buf, size_t nbyte)
   int byte_offset = nbyte % BLOCK_SIZE;
   int block_offset = nbyte / BLOCK_SIZE;
   struct fd write_fd = open_fd_list[fd];
-  struct inode write_node = inode_list[read_fd.inode_num];
-  
-  //preserve data in current block if offset
-  memset(write_buffer, 0, BLOCK_SIZE);
-  //check this if error
-  if(block_read(block_offset, write_buffer))
-    {
-    printf("Couldn't read current block\n");
-    return -1;
+  struct inode write_node = inode_list[write_fd.inode_num];
+
+  for (int i = 0; i < bytes_to_write/BLOCK_SIZE; i++){
+
+    if (block_offset * BLOCK_SIZE > write_node.file_size){
+      int free_block = find_free_bit(data_bitmap);
+      write_node.direct_offset[block_offset] = free_block;
+      set_bit(free_block, data_bitmap);
+    }
+
+    if (byte_offset + bytes_to_write > BLOCK_SIZE){
+      current_write = BLOCK_SIZE - byte_offset;
+    }else{
+      current_write = bytes_left;
+    }
+    
+    //preserve data in current block if offset
+    memset(write_buffer, 0, sizeof(write_buffer));
+    //check this if error
+    if(block_read(block_offset, write_buffer))
+      {
+	printf("Couldn't read current block\n");
+	return -1;
+      }
+    memcpy(write_buffer + byte_offset, buf + bytes_to_write-bytes_left, current_write);
+
+    if (block_write(block_offset, write_buffer)){
+      printf("Failed to Write to Block\n");
+      return -1;
+    }
+
+    bytes_left -= current_write;
+    byte_offset = 0;
+    block_offset++;
+    write_fd.offset += bytes_to_write;
   }
-  memcpy(write_buffer + byte_offset, buf + bytes_written, current_write);
-  if (block_write(block_offset, write_buffer)){
-    printf("Failed to Write to Block\n");
-    return -1;
-  }
-  bytes_left -= current_write;
-  byte_offset = 0;
-  block_offset++;
-  write_fd.offset += bytes_to_write;
-}
-return bytes_to_write;
+  return bytes_to_write;
 }
 
 int fs_get_filesize(int fd){
-  return -1;
+   return -1;
 }
-
+  
 int fs_listfiles(char ***files){
   return -1;
 }
