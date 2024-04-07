@@ -465,7 +465,34 @@ int fs_read(int fd, void *buf, size_t nbyte)
 
 int fs_write(int fd, const void *buf, size_t nbyte)
 {
-  return -1;
+  char *write_buffer[BLOCK_SIZE];
+  int bytes_to_write = 0;
+  int bytes_left = nbyte;
+  int current_write;
+  int byte_offset = nbyte % BLOCK_SIZE;
+  int block_offset = nbyte / BLOCK_SIZE;
+  struct fd write_fd = open_fd_list[fd];
+  struct inode write_node = inode_list[read_fd.inode_num];
+  
+  //preserve data in current block if offset
+  memset(write_buffer, 0, BLOCK_SIZE);
+  //check this if error
+  if(block_read(block_offset, write_buffer))
+    {
+    printf("Couldn't read current block\n");
+    return -1;
+  }
+  memcpy(write_buffer + byte_offset, buf + bytes_written, current_write);
+  if (block_write(block_offset, write_buffer)){
+    printf("Failed to Write to Block\n");
+    return -1;
+  }
+  bytes_left -= current_write;
+  byte_offset = 0;
+  block_offset++;
+  write_fd.offset += bytes_to_write;
+}
+return bytes_to_write;
 }
 
 int fs_get_filesize(int fd){
