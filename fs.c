@@ -428,6 +428,15 @@ int fs_delete(const char *name)
 
 int fs_read(int fd, void *buf, size_t nbyte)
 {
+  char *read_buffer[BLOCK_SIZE];
+  int bytes_to_read = 0;
+  int bytes_left = nbyte;
+  int byte_offset;
+  int block_offset;
+  struct fd read_fd = open_fd_list[fd];
+  struct inode read_node = inode_list[read_fd.inode_num];
+  
+  if (nbyte + read_fd.offset > read_node->
   
   return -1;
 }
