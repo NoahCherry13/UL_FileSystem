@@ -422,4 +422,28 @@ int fs_delete(const char *name)
   return 0;
 }
 
+int fs_read(int fd, void *buf, size_t nbyte)
+{
+  return -1;
+}
 
+int fs_write(int fd, const void *buf, size_t nbyte)
+{
+  return -1;
+}
+
+int fs_get_filesize(int fd){
+  return -1;
+}
+
+int fs_listfiles(char ***files){
+  return -1;
+}
+
+int fs_lseek(int fd, off_t offset){
+  return -1;
+}
+
+int fs_truncate(int fd, off_t length){
+  return -1;
+}
