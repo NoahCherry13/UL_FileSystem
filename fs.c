@@ -426,6 +426,17 @@ int fs_delete(const char *name)
 
 int fs_read(int fd, void *buf, size_t nbyte)
 {
+  if(fd < 0 || fd >= 32){
+    printf("Illegal FD\n");
+    return -1;
+  }
+
+  if (!open_fd_list[fd].is_used){
+    printf("FD Not Open\n");
+    return -1;
+  }
+
+
   char *read_buffer[BLOCK_SIZE];
   int bytes_to_read = 0;
   int bytes_left = nbyte;
