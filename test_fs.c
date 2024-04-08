@@ -25,27 +25,24 @@ int main(){
     printf("file open failed\n");
   }
     
-  char buf[BLOCK_SIZE];
-  memset(buf, 0, sizeof(buf));
-  strcpy(buf, "hello world");
-  int write_res = fs_write(fd, buf, 20);
+  char *buf = "hello world!";
+  int write_res = fs_write(fd, buf, sizeof(buf));
   if (write_res == -1 || write_res == 0){
     printf("write failed\n");
     return -1;
   }
 
-  memset(buf, 0, sizeof(buf));
-  if (fs_read(fd, buf, BLOCK_SIZE) == -1){
+  //memset(buf, 0, sizeof(char)*12);
+  if (fs_read(fd, buf, sizeof(buf)) == -1){
     printf("Failed Read\n");
   }
-  for(int i = 0; i < 20; i++){
+  for(int i = 0; i < 12; i++){
     printf("%c", buf[i]);
   }
   if(fs_close(fd)){
     printf("file open failed\n");
   }
-  
-  
+    
   if(fs_delete("Hello_World")){
     printf("Failed to delete file\n");
   }

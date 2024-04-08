@@ -441,17 +441,19 @@ int fs_read(int fd, void *buf, size_t nbyte)
   int bytes_to_read = 0;
   int bytes_left = nbyte;
   int current_read;
-  int byte_offset = nbyte % BLOCK_SIZE;
-  int block_offset = nbyte / BLOCK_SIZE;
-  struct fd read_fd = open_fd_list[fd];
-  struct inode read_node = inode_list[read_fd.inode_num];
-  
-  if (nbyte + read_fd.offset > read_node.file_size){
-    bytes_to_read = read_node.file_size - read_fd.offset;
-  }
+  int byte_offset = open_fd_list[fd].offset % BLOCK_SIZE;
+  int block_offset = open_fd_list[fd].offset / BLOCK_SIZE;
+  int num_bytes_read = 0;
+  struct fd *read_fd = &open_fd_list[fd];
+  struct inode *read_node = &inode_list[read_fd->inode_num];
 
+  if (nbyte + read_fd->offset > read_node->file_size){
+    bytes_to_read = read_node->file_size - read_fd->offset;
+  }
+  bytes_left = bytes_to_read;
+  
   while (bytes_left){
-    if(block_read(read_node.direct_offset[block_offset], read_buffer)){
+    if(block_read(read_node->direct_offset[block_offset], read_buffer)){
       printf("Failed to Read Block\n");
       return -1;
     }
@@ -461,13 +463,15 @@ int fs_read(int fd, void *buf, size_t nbyte)
     }else{
       current_read = bytes_left;
     }
-
+    
+    num_bytes_read += current_read;
+    memcpy(buf + num_bytes_read, read_buffer + byte_offset, current_read);
     bytes_left -= current_read;
     byte_offset = 0;
     block_offset++;
   }
 
-  read_fd.offset += bytes_to_read;
+  read_fd->offset += bytes_to_read;
   
   return bytes_to_read;
 }
@@ -492,8 +496,8 @@ int fs_write(int fd, const void *buf, size_t nbyte)
   int current_write;
   int byte_offset = nbyte % BLOCK_SIZE;
   int block_offset = nbyte / BLOCK_SIZE;
-  struct fd write_fd = open_fd_list[fd];
-  struct inode write_node = inode_list[write_fd.inode_num];
+  struct fd *write_fd = &open_fd_list[fd];
+  struct inode *write_node = &inode_list[write_fd->inode_num];
   int need_new = 0;
   int block_to_write = (nbyte + byte_offset)/BLOCK_SIZE;
   int bytes_written = 0;
@@ -503,10 +507,10 @@ int fs_write(int fd, const void *buf, size_t nbyte)
   
   for (int i = 0; i < block_to_write; i++){
 
-    if (block_offset * BLOCK_SIZE > write_node.file_size || write_node.file_size == 0){
+    if (block_offset * BLOCK_SIZE > write_node->file_size || write_node->file_size == 0){
       need_new = 1;
       int free_block = find_free_bit(data_bitmap);
-      write_node.direct_offset[block_offset] = free_block;
+      write_node->direct_offset[block_offset] = free_block;
       set_bit(free_block, data_bitmap);
     }
     
@@ -535,8 +539,8 @@ int fs_write(int fd, const void *buf, size_t nbyte)
     bytes_left -= current_write;
     byte_offset = 0;
     block_offset++;
-    write_fd.offset += current_write;
-    write_node.file_size += current_write;
+    write_fd->offset += current_write;
+    write_node->file_size += current_write;
   }
   
   return bytes_written;
