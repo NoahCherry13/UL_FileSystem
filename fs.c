@@ -437,20 +437,22 @@ int fs_read(int fd, void *buf, size_t nbyte)
   }
 
 
-  char *read_buffer[BLOCK_SIZE];
-  int bytes_to_read = 0;
-  int bytes_left = nbyte;
+  char read_buffer[BLOCK_SIZE];
+  int bytes_left;
   int current_read;
+  int bytes_read = 0;
   int byte_offset = open_fd_list[fd].offset % BLOCK_SIZE;
   int block_offset = open_fd_list[fd].offset / BLOCK_SIZE;
   int num_bytes_read = 0;
   struct fd *read_fd = &open_fd_list[fd];
   struct inode *read_node = &inode_list[read_fd->inode_num];
 
-  if (nbyte + read_fd->offset > read_node->file_size){
-    bytes_to_read = read_node->file_size - read_fd->offset;
+  if (nbyte + byte_offset > read_node->file_size){
+    bytes_left = read_node->file_size;
+  }else{
+    bytes_left = nbyte;
   }
-  bytes_left = bytes_to_read;
+  
   
   while (bytes_left){
     if(block_read(read_node->direct_offset[block_offset], read_buffer)){
@@ -458,22 +460,23 @@ int fs_read(int fd, void *buf, size_t nbyte)
       return -1;
     }
 
-    if (byte_offset + bytes_to_read > BLOCK_SIZE){
+    if (byte_offset + bytes_left > BLOCK_SIZE){
       current_read = BLOCK_SIZE - byte_offset;
     }else{
       current_read = bytes_left;
     }
     
-    num_bytes_read += current_read;
-    memcpy(buf + num_bytes_read, read_buffer + byte_offset, current_read);
+    
+    memcpy(buf + num_bytes_read, read_buffer + byte_offset, current_read-1);
+    bytes_read += current_read;
     bytes_left -= current_read;
     byte_offset = 0;
     block_offset++;
   }
 
-  read_fd->offset += bytes_to_read;
+  read_fd->offset += bytes_read;
   
-  return bytes_to_read;
+  return bytes_read;
 }
 
 int fs_write(int fd, const void *buf, size_t nbyte)
@@ -490,12 +493,12 @@ int fs_write(int fd, const void *buf, size_t nbyte)
   }
 
   
-  char *write_buffer[BLOCK_SIZE];
+  char write_buffer[BLOCK_SIZE];
   int bytes_to_write = 0;
   int bytes_left = nbyte;
   int current_write;
-  int byte_offset = nbyte % BLOCK_SIZE;
-  int block_offset = nbyte / BLOCK_SIZE;
+  int byte_offset = open_fd_list[fd].offset % BLOCK_SIZE;
+  int block_offset = open_fd_list[fd].offset / BLOCK_SIZE;
   struct fd *write_fd = &open_fd_list[fd];
   struct inode *write_node = &inode_list[write_fd->inode_num];
   int need_new = 0;
@@ -530,7 +533,7 @@ int fs_write(int fd, const void *buf, size_t nbyte)
       }
     }
     
-    memcpy(write_buffer + byte_offset, buf + bytes_to_write-bytes_left, current_write);
+    memcpy(write_buffer + byte_offset, buf + bytes_written, current_write);
     if (block_write(block_offset, write_buffer)){
       printf("Failed to Write to Block\n");
       return -1;

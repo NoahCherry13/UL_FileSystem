@@ -32,6 +32,14 @@ int main(){
     return -1;
   }
 
+  if(fs_close(fd)){
+    printf("file open failed\n");
+  }
+
+  fd = fs_open("Hello_World");
+  if(fd == -1){
+    printf("file open failed\n");
+  }
   //memset(buf, 0, sizeof(char)*12);
   if (fs_read(fd, buf, sizeof(buf)) == -1){
     printf("Failed Read\n");
