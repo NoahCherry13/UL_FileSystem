@@ -26,7 +26,7 @@ int main(){
   }
     
   char *buf = "hello world!";
-  int write_res = fs_write(fd, buf, sizeof(buf));
+  int write_res = fs_write(fd, buf, 12);
   if (write_res == -1 || write_res == 0){
     printf("write failed\n");
     return -1;
@@ -41,7 +41,7 @@ int main(){
     printf("file open failed\n");
   }
   //memset(buf, 0, sizeof(char)*12);
-  if (fs_read(fd, buf, sizeof(buf)) == -1){
+  if (fs_read(fd, buf, 12) == -1){
     printf("Failed Read\n");
   }
   for(int i = 0; i < 12; i++){

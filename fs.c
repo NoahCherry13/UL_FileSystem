@@ -443,7 +443,6 @@ int fs_read(int fd, void *buf, size_t nbyte)
   int bytes_read = 0;
   int byte_offset = open_fd_list[fd].offset % BLOCK_SIZE;
   int block_offset = open_fd_list[fd].offset / BLOCK_SIZE;
-  int num_bytes_read = 0;
   struct fd *read_fd = &open_fd_list[fd];
   struct inode *read_node = &inode_list[read_fd->inode_num];
 
@@ -467,7 +466,7 @@ int fs_read(int fd, void *buf, size_t nbyte)
     }
     
     
-    memcpy(buf + num_bytes_read, read_buffer + byte_offset, current_read-1);
+    memcpy(buf + bytes_read, read_buffer + byte_offset, current_read);
     bytes_read += current_read;
     bytes_left -= current_read;
     byte_offset = 0;
