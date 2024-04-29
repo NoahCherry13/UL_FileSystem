@@ -492,20 +492,20 @@ int fs_write(int fd, const void *buf, size_t nbyte)
   }
 
   
-  char write_buffer[BLOCK_SIZE];
-  int bytes_to_write = 0;
-  int bytes_left = nbyte;
-  int current_write;
-  int byte_offset = open_fd_list[fd].offset % BLOCK_SIZE;
-  int block_offset = open_fd_list[fd].offset / BLOCK_SIZE;
-  struct fd *write_fd = &open_fd_list[fd];
-  struct inode *write_node = &inode_list[write_fd->inode_num];
-  int need_new = 0;
-  int block_to_write = (nbyte + byte_offset)/BLOCK_SIZE;
-  int bytes_written = 0;
+  char write_buffer[BLOCK_SIZE]; //characters being written
+  int bytes_to_write = 0;  //number of characters being written
+  int bytes_left = nbyte;  //number of characters left to write
+  int current_write;  //number of bits written this loop
+  int byte_offset = open_fd_list[fd].offset % BLOCK_SIZE;  //offset of bytes into the first block
+  int block_offset = open_fd_list[fd].offset / BLOCK_SIZE;  //position of first block
+  struct fd *write_fd = &open_fd_list[fd];  //file being written to
+  struct inode *write_node = &inode_list[write_fd->inode_num];  //inode listing of file being written to
+  int need_new = 0; //is a new block needed
+  int block_to_write = (nbyte + byte_offset)/BLOCK_SIZE; //number of blocks needed to write
+  int bytes_written = 0;  //total number of bytes already written
 
   
-  if ((nbyte + byte_offset) % BLOCK_SIZE) block_to_write++;
+  if ((nbyte + byte_offset) % BLOCK_SIZE) block_to_write++; //if the current offset + bytes to write > block boundry, increment blocks to write
   
   for (int i = 0; i < block_to_write; i++){
 
@@ -516,7 +516,7 @@ int fs_write(int fd, const void *buf, size_t nbyte)
       set_bit(free_block, data_bitmap);
     }
     
-    if (byte_offset + bytes_to_write > BLOCK_SIZE){
+    if (byte_offset + bytes_left > BLOCK_SIZE){
       current_write = BLOCK_SIZE - byte_offset;
     }else{
       current_write = bytes_left;
@@ -541,7 +541,7 @@ int fs_write(int fd, const void *buf, size_t nbyte)
     bytes_left -= current_write;
     byte_offset = 0;
     block_offset++;
-    write_fd->offset += current_write;
+    write_fd->offset = block_offset * sizeof(char); //changed here from += current write
     write_node->file_size += current_write;
   }
   
