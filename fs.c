@@ -438,6 +438,7 @@ int fs_read(int fd, void *buf, size_t nbyte)
 
 
   char read_buffer[BLOCK_SIZE];
+
   int bytes_left;
   int current_read;
   int bytes_read = 0;
@@ -445,28 +446,32 @@ int fs_read(int fd, void *buf, size_t nbyte)
   int block_offset = open_fd_list[fd].offset / BLOCK_SIZE;
   struct fd *read_fd = &open_fd_list[fd];
   struct inode *read_node = &inode_list[read_fd->inode_num];
-
-  if (nbyte + byte_offset > read_node->file_size){
-    bytes_left = read_node->file_size;
-  }else{
+  int bytes_avail = read_node->file_size;
+  
+  if (nbyte + byte_offset > bytes_avail){
+    bytes_left = bytes_avail;
+  } else if (bytes_avail == 0){
+    bytes_left = 0;
+  } else {
     bytes_left = nbyte;
   }
   
   
   while (bytes_left){
-    if(block_read(read_node->direct_offset[block_offset], read_buffer)){
+
+    int block_num = read_node->direct_offset[block_offset];
+    if(block_read(block_num, read_buffer)){
       printf("Failed to Read Block\n");
       return -1;
     }
-
+    
     if (byte_offset + bytes_left > BLOCK_SIZE){
       current_read = BLOCK_SIZE - byte_offset;
     }else{
       current_read = bytes_left;
-    }
-    
-    
+    }  
     memcpy(buf + bytes_read, read_buffer + byte_offset, current_read);
+    
     bytes_read += current_read;
     bytes_left -= current_read;
     byte_offset = 0;
@@ -491,6 +496,11 @@ int fs_write(int fd, const void *buf, size_t nbyte)
     return -1;
   }
 
+  /*
+  for (int i = 0; i < nbyte; i++){
+    printf("%c\n", ((char *)buf)[i]);
+  }
+  */
   
   char write_buffer[BLOCK_SIZE]; //characters being written
   //int bytes_to_write = 0;  //number of characters being written

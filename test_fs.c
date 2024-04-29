@@ -26,8 +26,9 @@ int main(){
   }
   
   char *buf = "hello world!";
+  char *read_buf = malloc(12*sizeof(char));
   int write_res = fs_write(fd, buf, 12);
-  printf("after write\n");
+  //printf("after write\n");
   if (write_res == -1 || write_res == 0){
     printf("write failed\n");
     return -1;
@@ -41,12 +42,13 @@ int main(){
   if(fd == -1){
     printf("file open failed\n");
   }
-  printf("after 2nd open\n");
-  //memset(buf, 0, sizeof(char)*12);
-  if (fs_read(fd, buf, 12) == -1){
+  //printf("after 2nd open\n");
+  memset(read_buf, 0, 12);
+  //printf("after memset\n");
+  if (fs_read(fd, read_buf, 12) == -1){
     printf("Failed Read\n");
   }
-  printf("after read\n");
+  //printf("after read\n");
   for(int i = 0; i < 12; i++){
     printf("%c", buf[i]);
   }
