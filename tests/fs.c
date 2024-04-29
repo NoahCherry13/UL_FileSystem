@@ -364,7 +364,6 @@ int fs_close(int fd){
 int fs_create(const char *name)
 {
   for(int i = 0; i < MAX_FILES; i++){
-    
     if(!strcmp(dirs[i].obj_name, name)){
       printf("File Exists\n");
       return -1;
@@ -378,8 +377,7 @@ int fs_create(const char *name)
     printf("Unable to find Dir/Inode Entries\n");
     return -1;
   }
-
-  for(int i = 0; i < 16; i++) dirs[dir_ind].obj_name[i] = 0;
+  
   strcpy(dirs[dir_ind].obj_name, name);
   dirs[dir_ind].inode = inode;
   dirs[dir_ind].used = 1;
@@ -416,14 +414,11 @@ int fs_delete(const char *name)
 
   dirs[dir_ind].used = 0;
   reset_bit(inode_num, inode_bitmap);
-  used_blocks = inode_list[inode_num].file_size/BLOCK_SIZE + (inode_list[inode_num].file_size%BLOCK_SIZE > 0);
-  
+  used_blocks = inode_list[inode_num].file_size/BLOCK_SIZE;
   for (int i = 0; i < used_blocks; i++){
     reset_bit(inode_list[inode_num].direct_offset[i], data_bitmap);
     inode_list[inode_num].direct_offset[i] = -1;
   }
-  for(int i = 0; i < 16; i++)
-    dirs[dir_ind].obj_name[i] = 0;
 
   inode_list[inode_num].file_size = 0;
   return 0;

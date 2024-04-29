@@ -18,16 +18,44 @@ int main(){
   if(mount_fs("test_disk")){
     printf("fuck\n");
   }
-  fs_create("Hello_World");
+  //fs_create("Hello_World");
+
+
+  //testing repeated create and delete
+  for (int i = 0; i < 10; i++){
+    fs_create("delete_this");
+    fs_delete("delete_this");
+  }
+  printf("exiting loop\n");
+
+
   
   int fd = fs_open("Hello_World");
   if(fd == -1){
     printf("file open failed\n");
   }
+
+  int read_buf_size = 1500;
+  int write_buf_size = 2000;
+
+  char *mid_message = "hello my name is noah"; //21
+  char *buf = malloc(write_buf_size);
+  char *read_buf = malloc(read_buf_size);
+
+  for (int i = 0; i < 990; i++){
+    buf[i] = 'a';
+  }
+  int ind = 0;
+  for (int i = 990; i < 990+21; i++){
+    buf[i] = mid_message[ind];
+    ind++;
+  }
+  for (int i = 990+21; i < write_buf_size; i++){
+    buf[i] = 'b';
+  }
   
-  char *buf = "hello world!";
-  char *read_buf = malloc(12*sizeof(char));
-  int write_res = fs_write(fd, buf, 12);
+  
+  int write_res = fs_write(fd, buf, write_buf_size);
   //printf("after write\n");
   if (write_res == -1 || write_res == 0){
     printf("write failed\n");
@@ -43,14 +71,17 @@ int main(){
     printf("file open failed\n");
   }
   //printf("after 2nd open\n");
-  memset(read_buf, 0, 12);
-  //printf("after memset\n");
-  if (fs_read(fd, read_buf, 12) == -1){
+  memset(read_buf, 0, read_buf_size);
+  printf("read_buf:\n");
+  for(int i = 0; i < read_buf_size; i++){
+    printf("%c", read_buf[i]);
+  }
+  if (fs_read(fd, read_buf, read_buf_size) == -1){
     printf("Failed Read\n");
   }
-  //printf("after read\n");
-  for(int i = 0; i < 12; i++){
-    printf("%c", buf[i]);
+  printf("read_buf:\n");
+  for(int i = 0; i < read_buf_size; i++){
+    printf("%c", read_buf[i]);
   }
   if(fs_close(fd)){
     printf("file open failed\n");
