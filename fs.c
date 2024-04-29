@@ -493,7 +493,7 @@ int fs_write(int fd, const void *buf, size_t nbyte)
 
   
   char write_buffer[BLOCK_SIZE]; //characters being written
-  int bytes_to_write = 0;  //number of characters being written
+  //int bytes_to_write = 0;  //number of characters being written
   int bytes_left = nbyte;  //number of characters left to write
   int current_write;  //number of bits written this loop
   int byte_offset = open_fd_list[fd].offset % BLOCK_SIZE;  //offset of bytes into the first block
@@ -503,20 +503,23 @@ int fs_write(int fd, const void *buf, size_t nbyte)
   int need_new = 0; //is a new block needed
   int block_to_write = (nbyte + byte_offset)/BLOCK_SIZE; //number of blocks needed to write
   int bytes_written = 0;  //total number of bytes already written
-
+  int free_block;
   
   if ((nbyte + byte_offset) % BLOCK_SIZE) block_to_write++; //if the current offset + bytes to write > block boundry, increment blocks to write
   
   for (int i = 0; i < block_to_write; i++){
 
-    if (block_offset * BLOCK_SIZE > write_node->file_size || write_node->file_size == 0){
+    if ((block_offset * BLOCK_SIZE) >= write_node->file_size || write_node->file_size == 0){
       need_new = 1;
-      int free_block = find_free_bit(data_bitmap);
+      free_block = find_free_bit(data_bitmap);
       write_node->direct_offset[block_offset] = free_block;
       set_bit(free_block, data_bitmap);
     }
+    else{
+      free_block = write_node->direct_offset[block_offset];
+    }
     
-    if (byte_offset + bytes_left > BLOCK_SIZE){
+    if (byte_offset + bytes_left >= BLOCK_SIZE){
       current_write = BLOCK_SIZE - byte_offset;
     }else{
       current_write = bytes_left;
@@ -524,16 +527,16 @@ int fs_write(int fd, const void *buf, size_t nbyte)
     
     //preserve data in current block if offset
     if(need_new){
-      memset(write_buffer, 0, sizeof(write_buffer));
+      memset(write_buffer, 0, BLOCK_SIZE);
     }else{ 
-      if(block_read(block_offset, write_buffer)){
+      if(block_read(free_block, write_buffer)){
 	printf("Couldn't read current block\n");
 	return -1;
       }
     }
     
     memcpy(write_buffer + byte_offset, buf + bytes_written, current_write);
-    if (block_write(block_offset, write_buffer)){
+    if (block_write(free_block, write_buffer)){
       printf("Failed to Write to Block\n");
       return -1;
     }
