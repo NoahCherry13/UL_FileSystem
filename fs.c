@@ -372,6 +372,7 @@ int fs_create(const char *name)
   }
 
   int dir_ind = find_open_dir();
+  printf("dir ind: %d\n", dir_ind);
   int inode = find_free_bit(inode_bitmap);
 
   if(inode == -1 || dir_ind == -1){
