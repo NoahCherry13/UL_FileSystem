@@ -72,29 +72,32 @@ void reset_bit(int block_num, uint8_t *bitmap)
   bitmap[map_index] = bitmap[map_index]&(~(1<<bit_to_set));
 }
 
-int find_free_bit(uint8_t *bitmap)
+int find_free_bit(uint8_t *bitmap, int map_num)
 {
   int index = 0;
   int bit_num = 0;
   int block_num = -1;
   
   //initialize bitmaps
-  for (int i = 0; i < MAX_BLOCKS/8; i++){
-    if (bitmap[i]^0xFF){
-      index = i;
-      break;
+  if (map_num == 0){
+    for (int i = 0; i < MAX_BLOCKS/8; i++){
+      if (bitmap[i]^0xFF){
+	index = i;
+	break;
+      }
     }
   }
-
-  for (int i = 0; i < MAX_FILES/8; i++){
-    if (bitmap[i]^0xFF){
-      index = i;
-      break;
+  else {
+    for (int i = 0; i < MAX_FILES/8; i++){
+      if (bitmap[i]^0xFF){
+	index = i;
+	break;
+      }
     }
   }
   
   for (int i = 0; i < 8; i++){
-    if ((bitmap[index]>>bit_num)^1){
+    if ((bitmap[index]>>i)^1){
       bit_num = i;
       break;
     }
@@ -373,7 +376,7 @@ int fs_create(const char *name)
 
   int dir_ind = find_open_dir();
   //printf("dir ind: %d\n", dir_ind);
-  int inode = find_free_bit(inode_bitmap);
+  int inode = find_free_bit(inode_bitmap, 1);
 
   if(inode == -1 || dir_ind == -1){
     printf("Unable to find Dir/Inode Entries\n");
@@ -526,7 +529,7 @@ int fs_write(int fd, const void *buf, size_t nbyte)
 
     if ((block_offset * BLOCK_SIZE) >= write_node->file_size || write_node->file_size == 0){
       need_new = 1;
-      free_block = find_free_bit(data_bitmap);
+      free_block = find_free_bit(data_bitmap, 0);
       write_node->direct_offset[block_offset] = free_block;
       set_bit(free_block, data_bitmap);
     }

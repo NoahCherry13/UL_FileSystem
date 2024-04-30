@@ -35,7 +35,7 @@ int main(){
   //-------------------------------------------//  
   
   int read_buf_size = 1000;
-  int write_buf_size = 2000;
+  int write_buf_size = 4097;
   int ret = 0;
   
   char *mid_message = "hello my name is noah"; //21
@@ -66,8 +66,15 @@ int main(){
     printf("file open failed\n");
   }
   //-------------------------------------------//
+  //              Get File Size                //
+  //-------------------------------------------//
+  int file_size = fs_get_filesize(fd);
+  printf("filesize: %d\n", file_size);
+  
+  //-------------------------------------------//
   //              Reading                      //
   //-------------------------------------------//
+ 
   printf("preparing to read\n");
   memset(read_buf, 0, read_buf_size);
   ret = fs_lseek(fd, 990);
