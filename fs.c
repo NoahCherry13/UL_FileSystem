@@ -656,26 +656,29 @@ int fs_truncate(int fd, off_t length){
   char read_buf[BLOCK_SIZE];
   char write_buf[BLOCK_SIZE];
   
-  if (block_start < 10){
-    if (block_read(node->direct_offset+block_start, read_buf) < 0){
-      printf("ERROR: Failed to read block from disk\n");
-      return -1;
-    }
-    memset(write_buf, 0, BLOCK_SIZE);
-    memcpy(write_buf, read_buf, block_offset);
-    
-    if (block_write(node->direct_offset+block_start, write_buf) < 0){
-      printf("ERROR: Failed to write block to disk\n");
-	return -1;
-    }
+  if (block_read(node->direct_offset+block_start, read_buf) < 0){
+    printf("ERROR: Failed to read block from disk\n");
+    return -1;
+  }
+  memset(write_buf, 0, BLOCK_SIZE);
+  memcpy(write_buf, read_buf, block_offset);
+  
+  if (block_write(node->direct_offset+block_start, write_buf) < 0){
+    printf("ERROR: Failed to write block to disk\n");
+    return -1;
   }
   
+
   for (int i = block_start; i < block_start + blocks_delete; i++){
-    // Case 1: Direct offset
-    if (i < 10){
-      set_bit(node->direct_offset+i, data_bitmap);
-      //node->direct_offset+i = 0;
-    }
+    
+    set_bit(node->direct_offset+i, data_bitmap);
+    
+    //node->direct_offset+i = 0;
+    
   }
+
+  node->file_size = length;
+  if (open_fd_list[fd].offset > length) open_fd_list[fd].offset = length;
+  
   return 0;
 }

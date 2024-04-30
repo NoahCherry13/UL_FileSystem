@@ -99,6 +99,14 @@ int main(){
   for(int i = 0; i < read_buf_size; i++){
     printf("%c", read_buf[i]);
   }
+
+  if(fs_truncate(fd, 5000)){
+    printf("failed to truncate\n");
+  }
+
+  file_size = fs_get_filesize(fd);
+  printf("filesize: %d\n", file_size);
+  
   
   if(fs_close(fd)){
     printf("file open failed\n");
