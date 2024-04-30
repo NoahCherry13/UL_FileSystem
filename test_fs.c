@@ -21,7 +21,8 @@ int main(){
   }
 
   fs_create("Hello_World");
-
+  //fs_delete("Hello_World");
+  //fs_create("Hello_World");
   
   int fd = fs_open("Hello_World");
   if(fd == -1){
@@ -32,7 +33,7 @@ int main(){
   //-------------------------------------------//
   //              Writing                      //
   //-------------------------------------------//  
-
+  
   int read_buf_size = 1000;
   int write_buf_size = 2000;
   int ret = 0;
@@ -41,7 +42,6 @@ int main(){
   char *buf = malloc(write_buf_size);
   char *read_buf = malloc(read_buf_size);
 
-  
   int ind = 0;
   for (int i = 0; i < 990; i++){
     buf[i] = 'a';
@@ -68,6 +68,7 @@ int main(){
   //-------------------------------------------//
   //              Reading                      //
   //-------------------------------------------//
+  printf("preparing to read\n");
   memset(read_buf, 0, read_buf_size);
   ret = fs_lseek(fd, 990);
   ret = fs_read(fd, read_buf, 21);
@@ -86,7 +87,7 @@ int main(){
   if (fs_read(fd, read_buf, 21) == -1){
     printf("Failed Read\n");
   }
-  */
+  */  
   printf("read_buf:\n");
   for(int i = 0; i < read_buf_size; i++){
     printf("%c", read_buf[i]);

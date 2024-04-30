@@ -79,14 +79,14 @@ int find_free_bit(uint8_t *bitmap)
   int block_num = -1;
   
   //initialize bitmaps
-  for (int i; i < MAX_BLOCKS/8; i++){
+  for (int i = 0; i < MAX_BLOCKS/8; i++){
     if (bitmap[i]^0xFF){
       index = i;
       break;
     }
   }
 
-  for (int i; i < MAX_FILES/8; i++){
+  for (int i = 0; i < MAX_FILES/8; i++){
     if (bitmap[i]^0xFF){
       index = i;
       break;
@@ -372,7 +372,7 @@ int fs_create(const char *name)
   }
 
   int dir_ind = find_open_dir();
-  printf("dir ind: %d\n", dir_ind);
+  //printf("dir ind: %d\n", dir_ind);
   int inode = find_free_bit(inode_bitmap);
 
   if(inode == -1 || dir_ind == -1){
@@ -444,7 +444,6 @@ int fs_read(int fd, void *buf, size_t nbyte)
 
 
   char read_buffer[BLOCK_SIZE];
-
   int bytes_left;
   int current_read;
   int bytes_read = 0;
