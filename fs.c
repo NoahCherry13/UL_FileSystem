@@ -27,10 +27,10 @@ struct super_block {
 
 struct inode {
   uint16_t magic_number;
-  uint16_t direct_offset[10];
+  uint16_t direct_offset;
   //uint16_t single_indirect_offset
   //uint16_t double_indirect_offset
-  uint16_t file_size;
+  unsigned long int file_size;
 };
 
 struct directory{
@@ -423,8 +423,8 @@ int fs_delete(const char *name)
   used_blocks = inode_list[inode_num].file_size/BLOCK_SIZE + (inode_list[inode_num].file_size%BLOCK_SIZE > 0);
   
   for (int i = 0; i < used_blocks; i++){
-    reset_bit(inode_list[inode_num].direct_offset[i], data_bitmap);
-    inode_list[inode_num].direct_offset[i] = -1;
+    reset_bit(inode_list[inode_num].direct_offset+i, data_bitmap);
+    //inode_list[inode_num].direct_offset+i = -1;
   }
   for(int i = 0; i < 16; i++)
     dirs[dir_ind].obj_name[i] = 0;
@@ -467,7 +467,7 @@ int fs_read(int fd, void *buf, size_t nbyte)
   
   while (bytes_left){
 
-    int block_num = read_node->direct_offset[block_offset];
+    int block_num = (read_node->direct_offset)+block_offset;
     if(block_read(block_num, read_buffer)){
       printf("Failed to Read Block\n");
       return -1;
@@ -530,11 +530,11 @@ int fs_write(int fd, const void *buf, size_t nbyte)
     if ((block_offset * BLOCK_SIZE) >= write_node->file_size || write_node->file_size == 0){
       need_new = 1;
       free_block = find_free_bit(data_bitmap, 0);
-      write_node->direct_offset[block_offset] = free_block;
+      //write_node->direct_offset+block_offset = free_block;
       set_bit(free_block, data_bitmap);
     }
     else{
-      free_block = write_node->direct_offset[block_offset];
+      free_block = write_node->direct_offset+block_offset;
     }
     
     if (byte_offset + bytes_left >= BLOCK_SIZE){
@@ -657,14 +657,14 @@ int fs_truncate(int fd, off_t length){
   char write_buf[BLOCK_SIZE];
   
   if (block_start < 10){
-    if (block_read(node->direct_offset[block_start], read_buf) < 0){
+    if (block_read(node->direct_offset+block_start, read_buf) < 0){
       printf("ERROR: Failed to read block from disk\n");
       return -1;
     }
     memset(write_buf, 0, BLOCK_SIZE);
     memcpy(write_buf, read_buf, block_offset);
     
-    if (block_write(node->direct_offset[block_start], write_buf) < 0){
+    if (block_write(node->direct_offset+block_start, write_buf) < 0){
       printf("ERROR: Failed to write block to disk\n");
 	return -1;
     }
@@ -673,8 +673,8 @@ int fs_truncate(int fd, off_t length){
   for (int i = block_start; i < block_start + blocks_delete; i++){
     // Case 1: Direct offset
     if (i < 10){
-      set_bit(node->direct_offset[i], data_bitmap);
-      node->direct_offset[i] = 0;
+      set_bit(node->direct_offset+i, data_bitmap);
+      //node->direct_offset+i = 0;
     }
   }
   return 0;

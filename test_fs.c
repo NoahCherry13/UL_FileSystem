@@ -35,7 +35,7 @@ int main(){
   //-------------------------------------------//  
   
   int read_buf_size = 1000;
-  int write_buf_size = 4097;
+  int write_buf_size = 1000000;
   int ret = 0;
   
   char *mid_message = "hello my name is noah"; //21
