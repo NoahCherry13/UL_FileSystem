@@ -97,7 +97,7 @@ int find_free_bit(uint8_t *bitmap, int map_num)
   }
   
   for (int i = 0; i < 8; i++){
-    if ((bitmap[index]>>i)^1){
+    if (((bitmap[index]>>i)^1) == 1){
       bit_num = i;
       break;
     }
