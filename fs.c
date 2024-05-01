@@ -587,10 +587,13 @@ int fs_get_filesize(int fd){
   
 int fs_listfiles(char ***files){
   int name_ind = 0;
+  char *name;
   char **file_names = (char**) malloc(15*MAX_FILES);
   for(int i = 0; i < MAX_FILES; i++){
     if(dirs[i].used){
-      strncpy(file_names[name_ind], dirs[i].obj_name, 15);
+      name = malloc(16);
+      strncpy(name, dirs[i].obj_name, 15);
+      file_names[name_ind] = name;
       name_ind++;
     }
   }

@@ -104,9 +104,19 @@ int main(){
     printf("failed to truncate\n");
   }
 
+  printf("\n");
   file_size = fs_get_filesize(fd);
   printf("filesize: %d\n", file_size);
   
+  char **file_names = (char**)malloc(15*32);
+  if (fs_listfiles(&file_names)){
+    printf("failed to get filenames\n");
+  }
+  
+  for (int i = 0; i < 15; i++){
+    printf("%c", file_names[0][i]);
+  }
+  printf("\n");
   
   if(fs_close(fd)){
     printf("file open failed\n");
